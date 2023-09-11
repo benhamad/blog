@@ -10,7 +10,7 @@ center  -- is that it's name in Gnome -- I see that the Bluetoth tethering is
 enabled. There's no option in Gnome to remove it from the UI. So I went ahead
 and did it from the command line.
 
-```bash
+```console
 [chaker@chaker-yoga ]$ bluetoothctl devices
 Device 11:22:33:44:55:66 Onyx
 Device AA:BB:CC:DD:EE:FF Chaker's phone
