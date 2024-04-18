@@ -1,12 +1,13 @@
 # Reverse engineering illegal IPTV apk 
 
 I recently came across an illegal IPTV streaming Android application popular in
-my home country. This application offer pirated IPTV channels. Most of these
-channels are FTA channels, but some are paid (Bein sports, OSN, etc). A lot of
-these applications are available on the internet, but this one caught my
-attention because it's available in the Google Play Store with more than 10M
-downloads. So I went ahead and installed the application to figure out how it
-works and where the content is coming from.
+my home country with the name **Drama Live**. This application offer pirated
+IPTV channels. Most of these channels are FTA channels, but some are paid (Bein
+sports, OSN, etc). A lot of these applications are available on the internet,
+but this one caught my attention because it's available in the [Google Play
+Store](https://play.google.com/store/apps/details?id=com.sneig.livedrama&hl=en_CA&gl=US)
+with more than 10M downloads. So I went ahead and installed the application to
+figure out how it works and where the content is coming from.
 
 In the Play Store the application is advertised as a free IPTV player,
 and that it doesn't have any content. And users will have to provide their own.
@@ -68,6 +69,8 @@ intercept them, without the need to install a custom CA certificate. Listening
 to the traffic, I noticed that the payload of the requests issued by the
 application were encrypted though. It was clear that it's base64 encoded string,
 but I needed to figure out what kind of encryption it's. 
+
+![HTTP Toolkit](./images/drama-live-httptoolkit.png)
 
 One of the requests's payload:
 ```
@@ -247,7 +250,7 @@ app to decrypt the requests.
 
 This image is an example of the web app in action.
 
-![Web app](./images/drama_live.png)
+![Decrypting GetSettings](./images/drama-live-getSettings.png)
 
 ## Back to intercepting the traffic
 
@@ -311,19 +314,58 @@ The response is a bit interesting:
     "ar": "تمت العملية بنجاح"
   },
   "data": {
-    "url": "{\"url\":\"https://webhdrus.onlinehdhls.ru/lb/premium91/index.m3u8\",\"agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15\",\"acceptSSL\":\"1\",\"headers\":{\"User-Agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15\",\"referer\":\"https://lewblivehdplay.ru/\",\"Origin\":\"https://lewblivehdplay.ru/\"}}",
+    "url": "{\"url\":\"https://hls.muchasgraciasaficion2.one/hls/b27057ebdcc0edb51f694ac9fe4aaa19/index.m3u8\",\"agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36\",\"headers\":{\"referer\":\"https://www.koor-alive.live/p2p?live=live&channel=b27057ebdcc0edb51f694ac9fe4aaa19\",\"User-Agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36\"}}",
     "agent": "advanced"
   }
 }
 ```
 
 The `url` field is a JSON string. It does contain a link to a m3u8 file. But
-what's more interesting are those HTTP headers. If I understood correctly this
-is because the application is using a custom player to play the streams. And
-that it uses those headers to bypass some restrictions on the server side. 
+what's more interesting are those HTTP headers.  Trying to request directly the URL
+causes some sort of protection to kick in
+
+```console
+[chaker@chaker-yoga livedrama]$ curl https://hls.muchasgraciasaficion2.one/hls/b27057ebdcc0edb51f694ac9fe4aaa19/index.m3u8  
+......
+            <h2 data-translate="blocked_why_headline">Why have I been blocked?</h2>
+
+            <p data-translate="blocked_why_detail">This website is using a security service to protect itself from online attacks. The action you just performed triggered the security solution. There are several actions that could trigger this block including submitting a certain word or phrase, a SQL command or malformed data.</p>
+          </div>
+
+....
+```
+
+But if we use the headers provided in the response, we can access the m3u8 file.
+
+```console
+[chaker@chaker-yoga livedrama]$ curl -X GET "https://hls.muchasgraciasaficion2.one/hls/b27057ebdcc0edb51f694ac9fe4aaa19/index.m3u8" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36" -H "referer: https://www.koor-alive.live/p2p?live=live&channel=b27057ebdcc0edb51f694ac9fe4aaa19"
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-MEDIA-SEQUENCE:1151
+#EXT-X-TARGETDURATION:7
+#EXTINF:6.667,
+1713470481100.ts
+#EXTINF:6.666,
+1713470487300.ts
+#EXTINF:6.667,
+1713470494100.ts
+```
+
+This is seems to be some sort of stream hotlinking protection. The application
+though uses those headers with its own custom media player to play the stream.
+So the API is returning both the URLs and the headers necessary to bypass the
+protection.
+
 
 ## Conclusion
 
 Though the application is advertised as only a player, we saw how a single empty
 link can be used to activate a huge list of channels. Those channels are
-provided by a hardcoded API in the application. 
+provided by a hardcoded API in the application. The API provides all the
+necessary headers to hotlink illegal streams.
+
+I checked the media player part of the application and how the headers are used.
+And I think this is probably a full time job for a team of people to maintain
+the application and API. But seeing how much ads are shown in the application
+and the popularity of the application, it's probably worth it for the
+developers.
