@@ -27,8 +27,8 @@ player.
 
 That said, a particular link is heavily shared in the internet to be used with
 this application, it's available to anyone searching for the name of the
-application online. And with tiktok and other social media platforms, it's
-shared widely.
+application online. And with TikTok and other social media platforms, it got
+shared more and more.
 
 This link is for a service called "fgcode". This service seems to be offering
 some sort of playlist editor, where you provide your own m3u8 playlist and can
@@ -39,7 +39,7 @@ provided.
 This is where things get interesting.  The heavily shared link
 `fgcode.org/232425` is for an empty playlist empty m3u8 link.
 
-```bash
+```console
 [chaker@chaker-yoga drama_live]$ curl fgcode.org/232425 -L  -w "\n" 
 	#EXTM3U
 [chaker@chaker-yoga drama_live]$ 
@@ -95,7 +95,7 @@ files, and though that may be enough to figure out what was happing, jdx was
 more suited in this case. I used `jadx` to decompile the APK. And although the
 decompilation wasn't without errors, I had enough decompiled code to work with.
 
-```bash
+```console
 [nix-shell:~/Downloads/apk/drama_live]$ jadx drama_live.apk 
 INFO  - loading ...
 INFO  - processing ...
@@ -103,7 +103,7 @@ ERROR - finished with errors, count: 137
 ```
 Finding the name of the main package of the application:
 
-```bash
+```console
 [chaker@chaker-yoga drama_live]$ fd drama
 sources/com/sneig/livedrama/
 ```
@@ -116,7 +116,7 @@ Our main goal is to figure out how the requests are issues and there we can see
 how they're encrypted. One of the requests that I saw when intercepting the
 traffic was for a `getSettings` endpoint
 
-```bash
+```console
 [chaker@chaker-yoga livedrama]$ ag getSettings -l 
 a/f/c.java
 a/c/a.java
@@ -130,7 +130,7 @@ fragments/PlayerFragment.java
 Checking the matched files, only `j/b/n` was issuing an HTTP request. The other
 were references to a Java function called `getSettings`. 
 
-```bash
+```console
 [chaker@chaker-yoga livedrama]$ ag getSettings j/b/n.java 
 134:        String str = com.sneig.livedrama.h.n.j(this.b).g().q() + "getSettings";
 ```
@@ -297,10 +297,11 @@ that endoint is:
   "url": "http://.LS.V2LOAD_BALANCERlive_tv_beinsport1/s",
   "agent": "redirect"
 }
+```
 
 I changed the values for `user_id`, `device_id` and `timezone` for privacy reasons.
 
-The response is a bit interesting. 
+The response is a bit interesting:
 
 ```json
 {
@@ -323,6 +324,6 @@ that it uses those headers to bypass some restrictions on the server side.
 
 ## Conclusion
 
-Though the application is advertised itself as only a player, we saw how a
-single empty link can be used to activate a huge list of channels. Those
-channels are provided by a hardcoded API in the application. 
+Though the application is advertised as only a player, we saw how a single empty
+link can be used to activate a huge list of channels. Those channels are
+provided by a hardcoded API in the application. 
