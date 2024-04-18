@@ -1,4 +1,4 @@
-# Reverse engineering illegal IPTV apk 
+# Reverse engineering an illegal IPTV application on the Google Play Store
 
 I recently came across an illegal IPTV streaming Android application popular in
 my home country with the name **Drama Live**. This application offer pirated
@@ -28,7 +28,7 @@ player.
 
 That said, a particular link is heavily shared in the internet to be used with
 this application, it's available to anyone searching for the name of the
-application online. And with TikTok and other social media platforms, it got
+`dramalive` online. And with TikTok and other social media platforms, it got
 shared more and more.
 
 This link is for a service called "fgcode". This service seems to be offering
@@ -47,9 +47,9 @@ This is where things get interesting.  The heavily shared link
 ```
 
 But it's treated differently by the application. When you provide this link, the
-application loads a huge list of channels from an API hardcoded in the
-application. On the other hand when you provide a genuine M3U8 playlist, the
-application will only load the channels from that playlist. 
+application loads a huge list of channels from an API hardcoded in the within
+it. On the other hand when you provide a genuine M3U8 playlist, it will only
+load the channels from that playlist. 
 
 
 Note on `fgcode.org`: This service seems to be some kind of url shortener for m3u8
@@ -60,9 +60,9 @@ playlist can be brute forced. But it's not out main focus here.
 ## Intercepting the traffic
 
 To figure out how the application works, I started by intercepting the traffic
-between the application and the server. I used HTTP Toolkit to intercept the
-traffic. I will skip how to set up HTTP Toolkit, but you can find the
-instructions on their website. 
+between it and its API. I used HTTP Toolkit to intercept the traffic. I will
+skip how to set up HTTP Toolkit, but you can find the instructions on their
+website. 
 
 All requests issued by this application were plain HTTP, which made it easy to
 intercept them, without the need to install a custom CA certificate. Listening
@@ -359,13 +359,12 @@ protection.
 
 ## Conclusion
 
-Though the application is advertised as only a player, we saw how a single empty
-link can be used to activate a huge list of channels. Those channels are
-provided by a hardcoded API in the application. The API provides all the
-necessary headers to hotlink illegal streams.
+Though Dramalive is advertised as only a player, we saw how a single empty link
+can be used to activate a huge list of channels. Those channels are provided by
+a hardcoded API within the apk. The API provides all the necessary headers to
+hotlink illegal streams.
 
-I checked the media player part of the application and how the headers are used.
-And I think this is probably a full time job for a team of people to maintain
-the application and API. But seeing how much ads are shown in the application
-and the popularity of the application, it's probably worth it for the
-developers.
+I checked the media player part and how the headers are used.  And I think this
+is probably a full time job for a team of people to maintain this app and API.
+But seeing how much ads are shown and its popularity, it's probably worth it for
+the developers.
